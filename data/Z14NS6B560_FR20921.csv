@@ -1,0 +1,15 @@
+Basic Engine Information,,,,,Engine Performance Curve,,
+No. of Cyl.,6,FR Number,FR20921,,Speed (rpm),Torque (Nm),Parasitics (kW)
+Model,Z14NS6B560,Idel(rpm),600,,700,1670,122
+Rated Power(kW),418,At Speed(rpm),1800,,800,2100,176
+Peak Torque(N.M),2650,AT Speed(rpm),1100,,900,2500,236
+Max Power(kW),418,AT Speed(rpm),1800,,1000,2650,278
+,,,,,1100,2650,305
+,,,,,1200,2650,333
+,,,,,1300,2650,361
+,,,,,1400,2650,389
+,,,,,1500,2650,416
+,,,,,1600,2494,418
+,,,,,1700,2348,418
+,,,,,1800,2217,418
+,,,,,1830,2181,418
