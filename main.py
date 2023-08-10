@@ -21,7 +21,7 @@ gpsDataset = read_data(r"./data/TempData_GPS.csv")
 with st.sidebar:
   st.image('./CMI.png', width=40)
   st.title('FPA油耗试验数据分析')
-  testDate = st.date_input("请选择试验日期", dt.date(2023, 1, 1))
+  testDate = st.date_input("请选择试验日期", dt.date.today())
   
   canFile = st.file_uploader(label="请上传车辆*:red[CAN]*数据", accept_multiple_files=False)
   gpsFile = st.file_uploader(label="请上传车辆*:blue[GPS]*数据", accept_multiple_files=False)
