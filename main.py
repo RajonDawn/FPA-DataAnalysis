@@ -28,9 +28,10 @@ with st.sidebar:
 
   engModel = st.radio('请选择车辆发动机马力(hp)', options=['M13NS6B570', 'Z14NS6B560'])
   
-  if (canFile is not None) and (gpsFile is not None):
+  if (canFile is not None):
     # Can be used wherever a "file-like" object is accepted:
     canDataset = pd.read_csv(canFile, skiprows=[1])
+  if  (gpsFile is not None):
     gpsDataset = pd.read_csv(gpsFile, skiprows=[1])
 
   torq_570 = pd.read_csv(f'./data/M13NS6B570_FR21537.csv', skiprows=[0], usecols=[5, 6, 7])
