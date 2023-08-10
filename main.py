@@ -30,9 +30,9 @@ with st.sidebar:
   
   if (canFile is not None):
     # Can be used wherever a "file-like" object is accepted:
-    canDataset = pd.read_csv(canFile, skiprows=[1])
+    canDataset = pd.read_csv(canFile)
   if  (gpsFile is not None):
-    gpsDataset = pd.read_csv(gpsFile, skiprows=[1])
+    gpsDataset = pd.read_csv(gpsFile)
 
   torq_570 = pd.read_csv(f'./data/M13NS6B570_FR21537.csv', skiprows=[0], usecols=[5, 6, 7])
   torq_560 = pd.read_csv(f'./data/Z14NS6B560_FR20921.csv',skiprows=[0], usecols=[5, 6, 7])
