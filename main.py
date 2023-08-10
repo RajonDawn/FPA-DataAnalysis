@@ -14,8 +14,8 @@ def read_data(filepath):
 
   return data
 
-canDataset = read_data(r"./B12_0731_0802.csv")
-gpsDataset = read_data(r"./B12_0731_0802_GPS.csv")
+canDataset = read_data(r"./data/TempData_CAN.csv")
+gpsDataset = read_data(r"./data/TempData_GPS.csv")
 
 # Silder
 with st.sidebar:
