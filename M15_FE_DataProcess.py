@@ -36,9 +36,10 @@ with st.sidebar:
   with c2:
     hpB = st.radio('请选择B车发动机马力(hp)', options=[620, 660])
   
-  if (uploaded_canFile1 is not None) and (uploaded_canFile2 is not None):
+  if uploaded_canFile1 is not None:
     # Can be used wherever a "file-like" object is accepted:
     canDataset1 = pd.read_csv(uploaded_canFile1, skiprows=[1])
+  if uploaded_canFile1 is not None:
     canDataset2 = pd.read_csv(uploaded_canFile2, skiprows=[1])
 
   torq_620 = pd.DataFrame({'Speed':[550,600,700,800,900,1400,1500,1600,1700,1800,1830,1900,2000],
