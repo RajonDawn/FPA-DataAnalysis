@@ -21,7 +21,7 @@ gpsDataset = read_data(r"./data/TempData_GPS.csv")
 with st.sidebar:
   st.image('./CMI.png', width=40)
   st.title('FPA油耗试验数据分析')
-  testDate = st.date_input("请选择试验日期", dt.date.today())
+  testDate = st.date_input("请选择试验日期", dt.date(2023, 1, 1))
   
   canFile = st.file_uploader(label="请上传车辆*:red[CAN]*数据", accept_multiple_files=False)
   gpsFile = st.file_uploader(label="请上传车辆*:blue[GPS]*数据", accept_multiple_files=False)
@@ -67,8 +67,12 @@ sltTime = []
 sltTime.append(dt.datetime.combine(x1, x2))
 sltTime.append(dt.datetime.combine(y1, y2))
 
-gpsdf = gpsDataset.loc[(gpsDataset['PC_Timestamp_GPS']>=sltTime[0] )&(gpsDataset['PC_Timestamp_GPS']<=sltTime[1])]
-col2.map(gpsdf, size=1)
+try:
+  gpsdf = gpsDataset.loc[(gpsDataset['PC_Timestamp_GPS']>=sltTime[0] )&(gpsDataset['PC_Timestamp_GPS']<=sltTime[1])]
+  col2.map(gpsdf, size=1)
+except KeyError:
+  gpsdf = gpsDataset
+  col2.map(gpsdf, size=1)
 
 sltCAN = canDataset.loc[(canDataset['PC_Timestamp']>=sltTime[0] )&(canDataset['PC_Timestamp']<=sltTime[1])]
 numberCols = list(sltCAN.select_dtypes('number'))
