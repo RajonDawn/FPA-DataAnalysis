@@ -13,7 +13,7 @@ def clean_GPS(df):
   df['lon'] = (df['lon'] //100) + (df['lon'] % 100) / 60
   df = df.drop(df[(df['lon'] < 73.666) | (df['lon'] > 135.08333)].index)
   df = df.drop(df[(df['lat'] < 4) | (df['lat'] > 53.5)].index)
-  df.dropna(subset=['lat', 'lon', 'spd'], inplace=True)
+  df.dropna(subset=['lat', 'lon'], inplace=True)
   df['PC_Timestamp_GPS'] = pd.to_datetime(df['PC_Timestamp_GPS'], infer_datetime_format=True)
 
   while len(df)>5000:
