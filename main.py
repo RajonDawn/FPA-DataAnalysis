@@ -99,7 +99,7 @@ if len(canDataset)>0:
 
     subcol2.metric(label='平均车速(km/h):', value=np.round(sltCAN['Vehicle_Speed'].mean(),2))
     subcol2.metric(label='行驶车速(km/h):', value=np.round(sltCAN.loc[sltCAN['Vehicle_Speed']>2, 'Vehicle_Speed'].mean(),2))
-    coast = (sltCAN['Combustion_Control_Path_Owner']==136) & ((sltCAN['Vehicle_Speed']>10))
+    coast = ( (sltCAN['Combustion_Control_Path_Owner']==136) | (sltCAN['J39_CurrentGear']==0) ) & ((sltCAN['Vehicle_Speed']>10))
     subcol2.metric(label='空挡滑行占比(%):', value=np.round(sum(coast)/len(sltCAN)*100,2), help='CCPO=11且车速>10km/h的时间占比')
 
     subcol3.metric(label='计算油耗(L/100km):', value=np.round(fuelUsed/mileage*100,2))
