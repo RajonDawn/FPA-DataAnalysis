@@ -1,39 +1,42 @@
+from time import sleep
 import streamlit as st
 import pandas as pd
 
 import fun_ProcessData as fun
 import numpy as np
 import datetime as dt
-
+import pydeck as pdk
 
 st.set_page_config(layout="wide", page_icon='./CMI.png')
 
 @st.cache_data
-def read_data(filepath):
-  data = pd.read_csv(filepath)
-
+def read_data(filepaths):
+  data = pd.DataFrame()
+  for i in filepaths:
+    temp = pd.read_csv(i, na_values={r'\N','NaN','nan','Nan','NaN '})
+    data = pd.concat([data, temp], ignore_index=True)
   return data
 
-canDataset = read_data(r"./data/TempData_CAN.csv")
-gpsDataset = read_data(r"./data/TempData_GPS.csv")
+canDataset = read_data([r"./data/TempData_CAN.csv"])
+gpsDataset = read_data([r"./data/TempData_GPS.csv"])
 
 # Silder
 with st.sidebar:
   st.image('./CMI.png', width=40)
   st.title('FPA油耗试验数据分析')
-  testDate = st.date_input("请选择试验日期", dt.date(2023, 1, 1))
+  testDate = st.date_input("请选择试验日期", dt.date.today())
   
-  canFile = st.file_uploader(label="请上传车辆*:red[CAN]*数据", accept_multiple_files=False)
-  gpsFile = st.file_uploader(label="请上传车辆*:blue[GPS]*数据", accept_multiple_files=False)
+  canFiles = st.file_uploader(label="请上传车辆*:red[CAN]*数据", accept_multiple_files=True)
+  gpsFiles = st.file_uploader(label="请上传车辆*:blue[GPS]*数据", accept_multiple_files=True)
 
   engModel = st.radio('请选择车辆发动机马力(hp)', options=['M13NS6B570', 'Z14NS6B560'])
   
-  if (canFile is not None):
-    # Can be used wherever a "file-like" object is accepted:
-    canDataset = pd.read_csv(canFile)
-  if  (gpsFile is not None):
-    gpsDataset = pd.read_csv(gpsFile)
-
+  if len(canFiles)>0:
+    canDataset = read_data(canFiles)
+    
+  if len(gpsFiles)>0:
+    gpsDataset = read_data(gpsFiles)
+    
   torq_570 = pd.read_csv(f'./data/M13NS6B570_FR21537.csv', skiprows=[0], usecols=[5, 6, 7])
   torq_560 = pd.read_csv(f'./data/Z14NS6B560_FR20921.csv',skiprows=[0], usecols=[5, 6, 7])
   torq = torq_560
@@ -45,41 +48,64 @@ canDataset = fun.clean_df(canDataset)
 gpsDataset = fun.clean_GPS(gpsDataset)
 
 if len(canDataset)>0:
-
   strDatetime = pd.to_datetime(canDataset['PC_Timestamp']).min().to_pydatetime()
   endDatetime = pd.to_datetime(canDataset['PC_Timestamp']).max().to_pydatetime()
 else:
-  strDatetime = dt.datetime(2023,1,1, 0,0,0)
-  endDatetime = dt.datetime(2023,1,1, 23,0,0)
+  strDatetime = dt.datetime.combine(dt.date.today(), dt.time(0,0,0))
+  endDatetime = dt.datetime.combine(dt.date.today(), dt.time(23,59,59))
 
 col1, col2 = st.columns(2,  gap='large')
 
 col11, col12 = col1.columns(2,  gap='large')
 x1 = col11.date_input(label='请输入数据开始日期', value=strDatetime)
-x2 = col12.time_input(label='请输入数据开始时间', value=strDatetime) #, step=0:10:00)
+x2 = col12.time_input(label='请输入数据开始时间', value=strDatetime, step=dt.timedelta(minutes=5)) #step=0:10:00)
 
 
 y1 = col11.date_input(label='请输入数据结束日期', value=endDatetime)
-y2 = col12.time_input(label='请输入数据结束时间', value=endDatetime)# , step=0:10:00)
+y2 = col12.time_input(label='请输入数据结束时间', value=endDatetime, step=dt.timedelta(minutes=5)) #step=0:10:00)
 
 
 sltTime = []
 sltTime.append(dt.datetime.combine(x1, x2))
 sltTime.append(dt.datetime.combine(y1, y2))
 
-try:
-  gpsdf = gpsDataset.loc[(gpsDataset['PC_Timestamp_GPS']>=sltTime[0] )&(gpsDataset['PC_Timestamp_GPS']<=sltTime[1])]
-  col2.map(gpsdf, size=1)
-except KeyError:
-  gpsdf = gpsDataset
-  col2.map(gpsdf, size=1)
-
 sltCAN = canDataset.loc[(canDataset['PC_Timestamp']>=sltTime[0] )&(canDataset['PC_Timestamp']<=sltTime[1])]
 numberCols = list(sltCAN.select_dtypes('number'))
-
 fig_Alt = fun.plotAltVSpd(sltCAN)
 col1.plotly_chart(fig_Alt,  height=400)
-  
+
+
+try:
+  gpsdf = gpsDataset.loc[(gpsDataset['PC_Timestamp_GPS']>=sltTime[0] )&(gpsDataset['PC_Timestamp_GPS']<=sltTime[1])]
+  col2.pydeck_chart(pdk.Deck(
+    map_style=None,
+    initial_view_state=pdk.ViewState(
+        latitude=34.32,
+        longitude=108.55,
+        zoom=2.5,
+    ),
+    layers=[
+        pdk.Layer(
+          'ScatterplotLayer',
+          data=gpsdf,
+          opacity=0.7,
+          get_position='[lon, lat]',
+          get_radius=100,
+          radius_scale=6,
+          radius_min_pixels=5,
+          radius_max_pixels=5,
+
+          pickable=True,
+          extruded=True,
+          get_fill_color=[255,0,0],
+        )
+    ], 
+    tooltip={"text": "{Timestamp}"}
+  ))
+except KeyError:
+  gpsdf = gpsDataset
+
+
 
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8= st.tabs(["🚚Summary", "🔥Engine", "⚙️Transmission", "💨Exhuast", "☢️Fan", '⛰️Environment', '🚚Drive Ability', '📊Customization'])
@@ -99,15 +125,16 @@ if len(canDataset)>0:
 
     subcol2.metric(label='平均车速(km/h):', value=np.round(sltCAN['Vehicle_Speed'].mean(),2))
     subcol2.metric(label='行驶车速(km/h):', value=np.round(sltCAN.loc[sltCAN['Vehicle_Speed']>2, 'Vehicle_Speed'].mean(),2))
-    coast = ( (sltCAN['Combustion_Control_Path_Owner']==136) | (sltCAN['J39_CurrentGear']==0) ) & ((sltCAN['Vehicle_Speed']>10))
-    subcol2.metric(label='空挡滑行占比(%):', value=np.round(sum(coast)/len(sltCAN)*100,2), help='CCPO=11且车速>10km/h的时间占比')
+
+    coast = ( (sltCAN['Combustion_Control_Path_Owner']==136) | (sltCAN['J39_CurrentGear']==0) ) & ((sltCAN['Vehicle_Speed']>15))
+    subcol2.metric(label='空挡滑行占比(%):', value=np.round(sum(coast)/len(sltCAN)*100,2), help='车速小于700且车速>30km/h的时间占比')
 
     subcol3.metric(label='计算油耗(L/100km):', value=np.round(fuelUsed/mileage*100,2))
     subcol3.metric(label='ECM计算油耗(L/100km):', value=np.round(fuelUsed2/mileage2*100,2))
     subcol3.metric(label='再生次数:', value=sum(sltCAN['P_SFR_tmh_SinceActiveRegen'].diff()<0), help='根据P_SFR_tmh_SinceActiveRegen上下做差，如果出现负数，则再生次数+1')
 
     subcol4.metric(label='百公里换挡次数:', value=np.round(fun.cal_ShiftGear(sltCAN)/mileage2*100,2))
-    subcol4.metric(label='百公里刹车次数:', value=np.round((fun.cal_Brake(sltCAN))[1]/mileage2*100,2))
+    subcol4.metric(label='百公里刹车次数:', value=np.round((fun.cal_Brake(sltCAN))[2]/mileage2*100,2))
     subcol4.metric(label='百公里刹车时长(s):', value=np.round((fun.cal_Brake(sltCAN))[0]/mileage2*100,2))
 
     subcol5.metric(label='50%分位坡度中值:', value=np.percentile(sltCAN['J39_Transmission_Grade'].dropna(), 50))
@@ -210,9 +237,19 @@ if len(canDataset)>0:
     brakePie = fun.plotPie('刹车比例', sltCAN, 'Service_Brake_Switch')
     col2.plotly_chart(brakePie, theme="streamlit", use_container_width=True)
 
-  with tab7:
+    mme = fun.plotViolin(sltCAN, 'MME_Vehicle_Mass')
+    st.plotly_chart(mme, theme="streamlit",  use_container_width=True)
+
+  with tab7: ################################# 驾驶因素
     accHist = fun.plotHist(sltCAN, 'Accelerator_Pedal_Position', 5)
     st.plotly_chart(accHist, theme="streamlit", use_container_width=True)
+
+    diffNum = st.number_input(label='请输入步进大小', value=1)
+
+    sltCAN['Diff_of_Accelerator'] = sltCAN['Accelerator_Pedal_Position'].diff(periods=diffNum)
+    accDiff = fun.plotScatter(sltCAN, 'Vehicle_Speed', 'Diff_of_Accelerator')
+    st.plotly_chart(accDiff, theme="streamlit",  use_container_width=True)
+
     
 
   with tab8: ################################# 自定义
