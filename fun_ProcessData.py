@@ -1,3 +1,4 @@
+from importlib.machinery import DEBUG_BYTECODE_SUFFIXES
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -8,23 +9,23 @@ import plotly.express as px
 
 def clean_GPS(df):
   '''对GPS数据进行重命名和清洗，去除中国边境内以外的点'''
-  df.rename(mapper={'GPS_Latitude_GPS':'lat', 'GPS_Longitude_GPS':'lon', 'GPS_Speed_GPS':'spd', 'GPS_Altitude_GPS':'altitude'}, inplace=True, axis=1)
+  df.rename(columns={'GPS_Latitude_GPS':'lat', 'GPS_Longitude_GPS':'lon', 'GPS_Speed_GPS':'spd'}, inplace=True)
   df['lat'] = (df['lat'] //100) + (df['lat'] % 100) / 60
   df['lon'] = (df['lon'] //100) + (df['lon'] % 100) / 60
   df = df.drop(df[(df['lon'] < 73.666) | (df['lon'] > 135.08333)].index)
   df = df.drop(df[(df['lat'] < 4) | (df['lat'] > 53.5)].index)
   df.dropna(subset=['lat', 'lon'], inplace=True)
+  
   df['PC_Timestamp_GPS'] = pd.to_datetime(df['PC_Timestamp_GPS'], infer_datetime_format=True)
+  df['Timestamp'] = df['PC_Timestamp_GPS'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M'))
 
-  while len(df)>5000:
+  while len(df)>3000:
     df = df.loc[0::2,:]
-
   return df
 
   
 
 def clean_df(df_source):
-
   df_source = df_source[pd.to_numeric(df_source['Engine_Speed'], errors='coerce').notnull()]
   df_source.sort_values(by='ECM_Run_Time', inplace=True)
   df_source = df_source[pd.to_numeric(df_source['Engine_Speed'], errors='coerce').notnull()]
@@ -86,7 +87,9 @@ def cal_ShiftGear(df_source):
 def cal_Brake(df_source):
   brakeTime = sum(df_source['Service_Brake_Switch']>0)
   brakeCount = sum(df_source['Service_Brake_Switch'].diff()==1)
-  return [brakeTime, brakeCount]
+  
+  brakeCount_30 = sum((df_source['Service_Brake_Switch'].diff()==1) & (df_source['Vehicle_Speed']>30))
+  return [brakeTime, brakeCount, brakeCount_30]
 
 
 
@@ -199,3 +202,18 @@ def plotABT(df_source, ):
   return fig
 
 
+def plotViolin(df_source, col):
+  df = df_source[pd.to_numeric(df_source[col], errors='coerce').notnull()].copy()
+  fig = px.violin(
+    df,
+    y=col,
+    box=True,   # 开启之后在小提琴图里面绘制箱型图
+    points='all',  # all-全部   outliers-离群点   False-不显示，默认
+)
+
+  return fig
+
+
+def plotScatter(df_source, x, y):
+  fig = px.scatter(df_source, x, y)
+  return fig
