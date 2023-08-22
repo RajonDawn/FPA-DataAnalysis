@@ -37,7 +37,8 @@ def clean_df(df_source):
     df_source.loc[:, 'Time'] = df_source.loc[:, 'Time'] 
   df_source.loc[:, 'Altitude'] = df_source['Altitude'].rolling(window=15,).mean()
   df_source['PC_Timestamp'] = pd.to_datetime(df_source['PC_Timestamp'])
-
+  if 'FCR_Instantaneous_Fuel_Rate' not in list(df_source):
+    df_source.loc['FCR_Instantaneous_Fuel_Rate'] = df_source['Total_Fueling'] * df_source['Engine_Speed'] *6 * 60/2/1000000
   df_source['Engine Power'] = df_source['Engine_Speed'] * df_source['Net_Engine_Torque'] / 9550
   # df_source['CBR_Chi_Table_Mask'] = df_source['CBR_Chi_Table_Mask'].apply(lambda x: hex(x).split[1])
   return df_source
