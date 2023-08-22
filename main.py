@@ -33,10 +33,9 @@ with st.sidebar:
   
   if len(canFiles)>0:
     canDataset = read_data(canFiles)
-    canDataset = fun.clean_df(canDataset)
+    
   if len(gpsFiles)>0:
     gpsDataset = read_data(gpsFiles)
-    gpsDataset = fun.clean_GPS(gpsDataset)
     
   torq_570 = pd.read_csv(f'./data/M13NS6B570_FR21537.csv', skiprows=[0], usecols=[5, 6, 7])
   torq_560 = pd.read_csv(f'./data/Z14NS6B560_FR20921.csv',skiprows=[0], usecols=[5, 6, 7])
@@ -45,6 +44,9 @@ with st.sidebar:
     torq = torq_570
 
 #### 主界面
+canDataset = fun.clean_df(canDataset)
+gpsDataset = fun.clean_GPS(gpsDataset)
+
 if len(canDataset)>0:
   strDatetime = pd.to_datetime(canDataset['PC_Timestamp']).min().to_pydatetime()
   endDatetime = pd.to_datetime(canDataset['PC_Timestamp']).max().to_pydatetime()
