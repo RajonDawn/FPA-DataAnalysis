@@ -19,8 +19,8 @@ def clean_GPS(df):
   df['PC_Timestamp_GPS'] = pd.to_datetime(df['PC_Timestamp_GPS'], infer_datetime_format=True)
   df['Timestamp'] = df['PC_Timestamp_GPS'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M'))
 
-  while len(df)>3000:
-    df = df.loc[0::2,:]
+  #while len(df)>3000:
+    #df = df.loc[0::2,:]
   return df
 
   
