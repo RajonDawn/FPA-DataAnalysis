@@ -10,8 +10,10 @@ import plotly.express as px
 def clean_GPS(df):
   '''对GPS数据进行重命名和清洗，去除中国边境内以外的点'''
   df.rename(columns={'GPS_Latitude_GPS':'lat', 'GPS_Longitude_GPS':'lon', 'GPS_Speed_GPS':'spd'}, inplace=True)
-  df['lat'] = (df['lat'] //100) + (df['lat'] % 100) / 60
-  df['lon'] = (df['lon'] //100) + (df['lon'] % 100) / 60
+
+  if sum(df['lat']>1000)>10:
+    df['lat'] = (df['lat'] //100) + (df['lat'] % 100) / 60
+    df['lon'] = (df['lon'] //100) + (df['lon'] % 100) / 60
   df = df.drop(df[(df['lon'] < 73.666) | (df['lon'] > 135.08333)].index)
   df = df.drop(df[(df['lat'] < 4) | (df['lat'] > 53.5)].index)
   df.dropna(subset=['lat', 'lon'], inplace=True)
